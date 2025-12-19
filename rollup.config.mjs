@@ -1,7 +1,7 @@
-import { babel } from '@rollup/plugin-babel';
 import { Addon } from '@embroider/addon-dev/rollup';
+import { babel } from '@rollup/plugin-babel';
+import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { resolve, dirname } from 'node:path';
 
 const addon = new Addon({
   srcDir: 'src',
