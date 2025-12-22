@@ -5,7 +5,10 @@
   "keywords": [
     "ember-addon"
   ],
-  "repository": "",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/knoxville-utilities-board/ember-media.git"
+  },
   "license": "MIT",
   "author": "",
   "imports": {
@@ -87,6 +90,7 @@
     "prettier-plugin-ember-template-tag": "^2.1.2",
     "qunit": "^2.24.3",
     "qunit-dom": "^3.5.0",
+    "release-plan": "^0.17.0",
     "rollup": "^4.53.5",
     "testem": "^3.17.0",
     "typescript": "~5.8.3",
