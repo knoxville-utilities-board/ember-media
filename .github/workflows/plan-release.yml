@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - master
   pull_request_target: # This workflow has permissions on the repo, do NOT run code from PRs in this workflow. See https://securitylab.github.com/research/github-actions-preventing-pwn-requests/
     types:
       - labeled
@@ -20,8 +19,10 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       should-prepare: ${{ steps.should-prepare.outputs.should-prepare }}
+
     steps:
-      - uses: release-plan/actions/should-prepare-release@v1
+      - name: Check if we should prepare a release
+        uses: release-plan/actions/should-prepare-release@v1
         with:
           ref: 'main'
         id: should-prepare
@@ -35,25 +36,40 @@ jobs:
       contents: write
       issues: read
       pull-requests: write
-    if: needs.should-run-release-plan-prepare.outputs.should-prepare == 'true'    
+    if: needs.should-run-release-plan-prepare.outputs.should-prepare == 'true'
     steps:
-      - uses: release-plan/actions/prepare@v1
-        name: Run release-plan prepare
+      - name: Run release-plan prepare
+        uses: release-plan/actions/prepare@v1
         with:
           ref: 'main'
         env:
           GITHUB_AUTH: ${{ secrets.GITHUB_TOKEN }}
         id: explanation
 
-      - uses: peter-evans/create-pull-request@v7
-        name: Create Prepare Release PR
+      - name: Generate commit message
+        run: node .github/release-commit-message.js >> "$GITHUB_OUTPUT"
+        id: commit-message
+
+      - name: Generate Access Token
+        uses: actions/create-github-app-token@v2
+        id: generate-token
         with:
-          commit-message: "Prepare Release ${{ steps.explanation.outputs.new-version}} using 'release-plan'"
-          labels: "internal"
+          app_id: ${{ secrets.APP_ID }}
+          private_key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - name: Create Prepare Release PR
+        uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: ${{ steps.commit-message.outputs.COMMIT_MESSAGE }}
+          labels: 'internal'
           sign-commits: true
           branch: release-preview
-          title: Prepare Release ${{ steps.explanation.outputs.new-version }}
+          draft: true
+          title: ${{ steps.commit-message.outputs.COMMIT_MESSAGE }}
+          token: ${{ steps.generate-token.outputs.token }}
           body: |
+            Merging this PR will create a GitHub release and publish the package(s) to npm.
+
             This PR is a preview of the release that [release-plan](https://github.com/embroider-build/release-plan) has prepared. To release you should just merge this PR 👍
 
             -----------------------------------------
